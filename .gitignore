@@ -1,0 +1,24 @@
+# Keil编译产物
+*.o
+*.d
+*.crf
+*.lst
+*.map
+*.axf
+*.htm
+*.lnp
+*.bak
+*.uvguix.*
+*.scvd
+OBJ/
+Listings/
+DebugConfig/
+
+# 用户配置文件(保留工程文件但忽略用户设置)
+*.uvoptx
+*.uvopt
+
+# 其他临时文件
+*.tmp
+*.log
+*~
