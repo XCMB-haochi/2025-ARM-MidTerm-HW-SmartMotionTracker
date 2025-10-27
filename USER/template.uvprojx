@@ -339,7 +339,7 @@
               <MiscControls>--diag_suppress=68  --diag_suppress=111  --diag_suppress=550</MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\HARDWARE\LED;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\IIC;..\HARDWARE\24CXX;..\FWLIB\inc;..\HARDWARE\TOUCH;..\HARDWARE\TIMER;..\GUI;..\GUI\lvgl;..\GUI\lv_examples;..\GUI\lvgl_driver;..\APP;..\HARDWARE\GPS;..\HARDWARE\USART3</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\HARDWARE\LED;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\IIC;..\HARDWARE\24CXX;..\FWLIB\inc;..\HARDWARE\TOUCH;..\HARDWARE\TIMER;..\GUI;..\GUI\lvgl;..\GUI\lv_examples;..\GUI\lvgl_driver;..\APP;..\HARDWARE\GPS;..\HARDWARE\USART3;..\HARDWARE\MPU6050;..\HARDWARE\MPU6050\eMPL;..\HARDWARE\IIC</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -467,6 +467,21 @@
               <FileName>usart3.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\USART3\usart3.c</FilePath>
+            </File>
+            <File>
+              <FileName>mpu6050.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\MPU6050\mpu6050.c</FilePath>
+            </File>
+            <File>
+              <FileName>inv_mpu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\MPU6050\eMPL\inv_mpu.c</FilePath>
+            </File>
+            <File>
+              <FileName>inv_mpu_dmp_motion_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\MPU6050\eMPL\inv_mpu_dmp_motion_driver.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1007,6 +1022,16 @@
               <FileName>app_ui_gps.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\app_ui_gps.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_mpu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\app_mpu.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_ui_mpu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\app_ui_mpu.c</FilePath>
             </File>
           </Files>
         </Group>

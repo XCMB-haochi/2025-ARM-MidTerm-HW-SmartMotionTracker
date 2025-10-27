@@ -12,6 +12,8 @@
 // #include "app_test.h"      // 阶段1测试界面
 #include "app_gps.h"          // 阶段2: GPS模块
 #include "app_ui_gps.h"       // 阶段2: GPS UI界面
+#include "app_mpu.h"          // 阶段3: MPU6050模块
+#include "app_ui_mpu.h"       // 阶段3: MPU6050 UI界面
 
 int main(void)
 { 
@@ -33,6 +35,10 @@ int main(void)
 	App_GPS_Init();       // 初始化GPS模块
 	App_UI_GPS_Create();  // 创建GPS界面
 
+	// ========== 阶段3: MPU6050模块测试 ==========
+	App_MPU_Init();       // 初始化MPU6050模块
+	App_UI_MPU_Create();  // 创建MPU6050界面
+
 	u16 ui_update_counter = 0;
 
 	while(1)
@@ -43,12 +49,16 @@ int main(void)
 		// GPS数据持续解析（每次循环都检查）
 		App_GPS_Update();
 
+		// MPU6050数据持续读取（每次循环都检查）
+		App_MPU_Update();
+
 		// UI更新频率控制 (每200次循环更新一次UI，约200ms)
 		ui_update_counter++;
 		if(ui_update_counter >= 200)
 		{
 			ui_update_counter = 0;
-			App_UI_GPS_Update();  // 更新UI显示
+			App_UI_GPS_Update();  // 更新GPS UI显示
+			App_UI_MPU_Update();  // 更新MPU UI显示
 			LED0 = !LED0;         // LED闪烁指示运行
 		}
 
