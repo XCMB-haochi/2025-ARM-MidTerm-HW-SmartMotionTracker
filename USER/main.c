@@ -33,20 +33,23 @@ int main(void)
 	App_GPS_Init();       // 初始化GPS模块
 	App_UI_GPS_Create();  // 创建GPS界面
 
-	u16 gps_update_counter = 0;
+	u16 ui_update_counter = 0;
 
 	while(1)
 	{
 		tp_dev.scan(0);
 		lv_task_handler();
 
-		// GPS数据更新 (每100ms更新一次)
-		gps_update_counter++;
-		if(gps_update_counter >= 100)
+		// GPS数据持续解析（每次循环都检查）
+		App_GPS_Update();
+
+		// UI更新频率控制 (每200次循环更新一次UI，约200ms)
+		ui_update_counter++;
+		if(ui_update_counter >= 200)
 		{
-			gps_update_counter = 0;
-			App_GPS_Update();     // 更新GPS数据
+			ui_update_counter = 0;
 			App_UI_GPS_Update();  // 更新UI显示
+			LED0 = !LED0;         // LED闪烁指示运行
 		}
 
 		delay_ms(1);

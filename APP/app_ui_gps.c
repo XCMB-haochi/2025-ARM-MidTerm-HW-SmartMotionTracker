@@ -95,13 +95,13 @@ void App_UI_GPS_Create(void)
     lv_label_set_text(label_time, "UTC Time:  --:--:--");
     lv_obj_align(label_time, NULL, LV_ALIGN_IN_TOP_LEFT, 15, y_offset);
 
-    // ========== 底部提示 ==========
+    // ========== 底部状态提示 ==========
     lv_obj_t * hint = lv_label_create(scr, NULL);
-    lv_label_set_text(hint, "Waiting for GPS signal...");
+    lv_label_set_text(hint, "Stage 2: GPS module working!");
 
     static lv_style_t hint_style;
     lv_style_copy(&hint_style, &lv_style_plain);
-    hint_style.text.color = LV_COLOR_GRAY;
+    hint_style.text.color = LV_COLOR_GREEN;
     lv_label_set_style(hint, LV_LABEL_STYLE_MAIN, &hint_style);
     lv_obj_align(hint, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -10);
 }
@@ -112,36 +112,36 @@ void App_UI_GPS_Create(void)
  */
 void App_UI_GPS_Update(void)
 {
-    char buf[100];
+    char buf[120];
+
+    // 更新卫星数（总是显示）
+    sprintf(buf, "Satellites: %d", g_gps_data.satellites);
+    lv_label_set_text(label_satellites, buf);
 
     if(g_gps_data.valid)
     {
         // 更新状态
         lv_label_set_text(label_status, "GPS Status: Fixed");
 
-        // 更新卫星数
-        sprintf(buf, "Satellites: %d", g_gps_data.satellites);
-        lv_label_set_text(label_satellites, buf);
-
         // 更新纬度
-        sprintf(buf, "Latitude:  %.6f %c", g_gps_data.latitude, g_gps_data.lat_dir);
+        sprintf(buf, "Lat: %.6f %c", g_gps_data.latitude, g_gps_data.lat_dir);
         lv_label_set_text(label_lat, buf);
 
         // 更新经度
-        sprintf(buf, "Longitude: %.6f %c", g_gps_data.longitude, g_gps_data.lon_dir);
+        sprintf(buf, "Lon: %.6f %c", g_gps_data.longitude, g_gps_data.lon_dir);
         lv_label_set_text(label_lon, buf);
 
         // 更新速度
-        sprintf(buf, "Speed:     %.2f km/h", g_gps_data.speed_kmh);
+        sprintf(buf, "Speed: %.2f km/h", g_gps_data.speed_kmh);
         lv_label_set_text(label_speed, buf);
 
         // 更新海拔
-        sprintf(buf, "Altitude:  %.1f m", g_gps_data.altitude);
+        sprintf(buf, "Alt: %.1f m", g_gps_data.altitude);
         lv_label_set_text(label_altitude, buf);
 
         // 更新时间 (UTC时间+8小时=北京时间)
         u8 beijing_hour = (g_gps_data.hour + 8) % 24;
-        sprintf(buf, "UTC Time:  %02d:%02d:%02d (BJ: %02d:%02d)",
+        sprintf(buf, "UTC: %02d:%02d:%02d BJ:%02d:%02d",
                 g_gps_data.hour, g_gps_data.minute, g_gps_data.second,
                 beijing_hour, g_gps_data.minute);
         lv_label_set_text(label_time, buf);
@@ -150,7 +150,5 @@ void App_UI_GPS_Update(void)
     {
         // GPS未定位
         lv_label_set_text(label_status, "GPS Status: Searching...");
-        sprintf(buf, "Satellites: %d (searching)", g_gps_data.satellites);
-        lv_label_set_text(label_satellites, buf);
     }
 }

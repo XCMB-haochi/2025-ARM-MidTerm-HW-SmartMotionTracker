@@ -339,7 +339,7 @@
               <MiscControls>--diag_suppress=68  --diag_suppress=111  --diag_suppress=550</MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\HARDWARE\LED;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\IIC;..\HARDWARE\24CXX;..\FWLIB\inc;..\HARDWARE\TOUCH;..\HARDWARE\TIMER;..\GUI;..\GUI\lvgl;..\GUI\lv_examples;..\GUI\lvgl_driver;..\APP</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\HARDWARE\LED;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\IIC;..\HARDWARE\24CXX;..\FWLIB\inc;..\HARDWARE\TOUCH;..\HARDWARE\TIMER;..\GUI;..\GUI\lvgl;..\GUI\lv_examples;..\GUI\lvgl_driver;..\APP;..\HARDWARE\GPS;..\HARDWARE\USART3</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -457,6 +457,16 @@
               <FileName>timer.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\HARDWARE\TIMER\timer.c</FilePath>
+            </File>
+            <File>
+              <FileName>gps.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\GPS\gps.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart3.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\HARDWARE\USART3\usart3.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -987,6 +997,16 @@
               <FileName>app_test.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\APP\app_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_gps.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\app_gps.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_ui_gps.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\app_ui_gps.c</FilePath>
             </File>
           </Files>
         </Group>
