@@ -33,8 +33,7 @@ static lv_obj_t * label_yaw;
 static lv_obj_t * label_temp;
 
 // Data page
-static lv_obj_t * btn_start_log;
-static lv_obj_t * btn_stop_log;
+static lv_obj_t * btn_record_toggle;  // Combined Start/Stop button
 static lv_obj_t * btn_dark_mode;
 static lv_obj_t * btn_browse_data;
 static lv_obj_t * btn_clear_data;
@@ -44,6 +43,7 @@ static lv_obj_t * label_track_info;
 static lv_obj_t * label_last_record;  // Preview last recorded data
 static lv_obj_t * label_statistics;    // Statistics display
 static lv_obj_t * label_browse_data;   // Browse data display
+static lv_obj_t * label_record_btn;    // Label for record toggle button
 
 // Dark mode button labels (for updating text)
 static lv_obj_t * label_dark_home;
@@ -72,24 +72,30 @@ static float last_lon = 0.0f;
 static u8 stats_initialized = 0;
 
 // Button event handler
-static void btn_start_log_event(lv_obj_t * obj, lv_event_t event)
+static void btn_record_toggle_event(lv_obj_t * obj, lv_event_t event)
 {
     if(event == LV_EVENT_CLICKED)
     {
-        App_SDCard_StartLog();
-        // Reset statistics when starting new log
-        max_speed = 0.0f;
-        max_altitude = 0.0f;
-        total_distance = 0.0f;
-        stats_initialized = 0;
-    }
-}
+        if(g_sdcard_status.logging)
+        {
+            // Currently logging, stop it
+            App_SDCard_StopLog();
+            lv_label_set_text(label_record_btn, "Start Log");
+            lv_btn_set_style(btn_record_toggle, LV_BTN_STYLE_REL, &style_btn_green);
+        }
+        else
+        {
+            // Not logging, start it
+            App_SDCard_StartLog();
+            lv_label_set_text(label_record_btn, "Stop Log");
+            lv_btn_set_style(btn_record_toggle, LV_BTN_STYLE_REL, &style_btn_red);
 
-static void btn_stop_log_event(lv_obj_t * obj, lv_event_t event)
-{
-    if(event == LV_EVENT_CLICKED)
-    {
-        App_SDCard_StopLog();
+            // Reset statistics when starting new log
+            max_speed = 0.0f;
+            max_altitude = 0.0f;
+            total_distance = 0.0f;
+            stats_initialized = 0;
+        }
     }
 }
 
@@ -531,25 +537,15 @@ void App_UI_Main_Create(void)
     lv_label_set_text(control_header, "Recording Control:");
     lv_obj_set_pos(control_header, 30, 280);
 
-    // Start button (green)
-    btn_start_log = lv_btn_create(tab_files, NULL);
-    lv_obj_set_size(btn_start_log, 180, 50);
-    lv_obj_set_pos(btn_start_log, 30, 315);
-    lv_btn_set_style(btn_start_log, LV_BTN_STYLE_REL, &style_btn_green);
-    lv_obj_set_event_cb(btn_start_log, btn_start_log_event);
+    // Record toggle button (Start/Stop combined, centered)
+    btn_record_toggle = lv_btn_create(tab_files, NULL);
+    lv_obj_set_size(btn_record_toggle, 380, 50);
+    lv_obj_set_pos(btn_record_toggle, 50, 315);
+    lv_btn_set_style(btn_record_toggle, LV_BTN_STYLE_REL, &style_btn_green);
+    lv_obj_set_event_cb(btn_record_toggle, btn_record_toggle_event);
 
-    lv_obj_t * label_start = lv_label_create(btn_start_log, NULL);
-    lv_label_set_text(label_start, "Start Log");
-
-    // Stop button (red)
-    btn_stop_log = lv_btn_create(tab_files, NULL);
-    lv_obj_set_size(btn_stop_log, 180, 50);
-    lv_obj_set_pos(btn_stop_log, 230, 315);
-    lv_btn_set_style(btn_stop_log, LV_BTN_STYLE_REL, &style_btn_red);
-    lv_obj_set_event_cb(btn_stop_log, btn_stop_log_event);
-
-    lv_obj_t * label_stop = lv_label_create(btn_stop_log, NULL);
-    lv_label_set_text(label_stop, "Stop Log");
+    label_record_btn = lv_label_create(btn_record_toggle, NULL);
+    lv_label_set_text(label_record_btn, "Start Log");
 
     // File management buttons
     lv_obj_t * manage_header = lv_label_create(tab_files, NULL);
@@ -708,6 +704,18 @@ void App_UI_Main_Update(void)
 
     sprintf(buf, "Records: %d", g_sdcard_status.record_count);
     lv_label_set_text(label_record_count, buf);
+
+    // Update record toggle button state
+    if(g_sdcard_status.logging)
+    {
+        lv_label_set_text(label_record_btn, "Stop Log");
+        lv_btn_set_style(btn_record_toggle, LV_BTN_STYLE_REL, &style_btn_red);
+    }
+    else
+    {
+        lv_label_set_text(label_record_btn, "Start Log");
+        lv_btn_set_style(btn_record_toggle, LV_BTN_STYLE_REL, &style_btn_green);
+    }
 
     // Update statistics (only when GPS is valid and logging)
     if(g_gps_data.valid && g_sdcard_status.logging)

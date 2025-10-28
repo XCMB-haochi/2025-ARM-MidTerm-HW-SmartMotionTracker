@@ -12,6 +12,7 @@ App_SDCard_Status g_sdcard_status = {0};
 
 static FIL log_file;
 static char log_filename[32];
+static u16 next_file_index = 0;  // Track next available file index
 
 /**
  * @brief Initialize SD card and FATFS
@@ -19,6 +20,9 @@ static char log_filename[32];
 void App_SDCard_Init(void)
 {
     u8 res;
+    FRESULT fres;
+    FIL test_file;
+    char test_filename[32];
 
     g_sdcard_status.initialized = 0;
     g_sdcard_status.logging = 0;
@@ -42,6 +46,23 @@ void App_SDCard_Init(void)
     }
 
     g_sdcard_status.initialized = 1;
+
+    // Scan existing files to find next available index
+    next_file_index = 0;
+    for(u16 i = 0; i < 1000; i++)
+    {
+        sprintf(test_filename, "0:/data_%03d.csv", i);
+        fres = f_open(&test_file, test_filename, FA_READ);
+        if(fres == FR_OK)
+        {
+            f_close(&test_file);
+            next_file_index = i + 1;  // File exists, try next index
+        }
+        else
+        {
+            break;  // File doesn't exist, this is our next index
+        }
+    }
 }
 
 /**
@@ -56,14 +77,21 @@ void App_SDCard_StartLog(void)
     if(g_sdcard_status.initialized == 0)
         return;
 
-    // Generate log filename with timestamp
-    sprintf(log_filename, "0:/data_%03d.csv", g_sdcard_status.record_count / 1000);
+    // Generate log filename with next available index
+    sprintf(log_filename, "0:/data_%03d.csv", next_file_index);
 
-    // Open file for append
-    res = f_open(&log_file, log_filename, FA_CREATE_ALWAYS | FA_WRITE);
+    // Create new file (fail if already exists)
+    res = f_open(&log_file, log_filename, FA_CREATE_NEW | FA_WRITE);
     if(res != FR_OK)
     {
-        return;  // Failed to create file
+        // If file exists, try next index
+        next_file_index++;
+        sprintf(log_filename, "0:/data_%03d.csv", next_file_index);
+        res = f_open(&log_file, log_filename, FA_CREATE_NEW | FA_WRITE);
+        if(res != FR_OK)
+        {
+            return;  // Failed to create file
+        }
     }
 
     // Write CSV header
@@ -85,6 +113,9 @@ void App_SDCard_StopLog(void)
 
     f_close(&log_file);
     g_sdcard_status.logging = 0;
+
+    // Increment file index for next log session
+    next_file_index++;
 }
 
 /**
