@@ -1152,13 +1152,6 @@
         </Group>
         <Group>
           <GroupName>IMAGES</GroupName>
-          <Files>
-            <File>
-              <FileName>logo_image.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\IMAGES\logo_image.c</FilePath>
-            </File>
-          </Files>
         </Group>
       </Groups>
     </Target>

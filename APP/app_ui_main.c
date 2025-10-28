@@ -10,7 +10,7 @@ static lv_obj_t * tabview;
 static lv_obj_t * tab_home;
 static lv_obj_t * tab_gps;
 static lv_obj_t * tab_imu;
-static lv_obj_t * tab_data;
+static lv_obj_t * tab_files;  // Changed from tab_data to tab_files
 static lv_obj_t * main_screen;
 static lv_obj_t * status_bar;
 
@@ -44,6 +44,12 @@ static lv_obj_t * label_track_info;
 static lv_obj_t * label_last_record;  // Preview last recorded data
 static lv_obj_t * label_statistics;    // Statistics display
 static lv_obj_t * label_browse_data;   // Browse data display
+
+// Dark mode button labels (for updating text)
+static lv_obj_t * label_dark_home;
+static lv_obj_t * label_dark_gps;
+static lv_obj_t * label_dark_imu;
+static lv_obj_t * label_dark_files;
 
 // Button styles
 static lv_style_t style_btn_green;
@@ -122,9 +128,10 @@ static void btn_dark_mode_event(lv_obj_t * obj, lv_event_t event)
             lv_obj_set_style(main_screen, &style_dark_bg);
             lv_obj_set_style(status_bar, &style_dark_statusbar);
             lv_tabview_set_style(tabview, LV_TABVIEW_STYLE_BG, &style_dark_tab);
+            lv_obj_set_style(tab_home, &style_dark_tab);
             lv_obj_set_style(tab_gps, &style_dark_tab);
             lv_obj_set_style(tab_imu, &style_dark_tab);
-            lv_obj_set_style(tab_data, &style_dark_tab);
+            lv_obj_set_style(tab_files, &style_dark_tab);
         }
         else
         {
@@ -151,9 +158,10 @@ static void btn_dark_mode_event(lv_obj_t * obj, lv_event_t event)
             style_light_tab.body.padding.inner = 10;
 
             lv_tabview_set_style(tabview, LV_TABVIEW_STYLE_BG, &style_light_tab);
+            lv_obj_set_style(tab_home, &style_light_tab);
             lv_obj_set_style(tab_gps, &style_light_tab);
             lv_obj_set_style(tab_imu, &style_light_tab);
-            lv_obj_set_style(tab_data, &style_light_tab);
+            lv_obj_set_style(tab_files, &style_light_tab);
         }
     }
 }
@@ -163,32 +171,31 @@ static void btn_browse_data_event(lv_obj_t * obj, lv_event_t event)
     if(event == LV_EVENT_CLICKED)
     {
         char buffer[200];
-        char display[400];
-        u32 total = App_SDCard_GetTotalRecords();
+        char display[500];
 
-        if(total == 0)
+        // Check if SD card is initialized
+        if(g_sdcard_status.initialized == 0)
         {
-            lv_label_set_text(label_browse_data, "No records to display");
+            lv_label_set_text(label_browse_data, "SD Card Error!\nCannot access files");
             return;
         }
 
-        // Display last 5 records
-        sprintf(display, "Last 5 Records (Total: %lu):\n", total);
-
-        for(u32 i = 0; i < 5 && i < total; i++)
+        // Display file list (simulated - showing current recording status)
+        if(g_sdcard_status.logging)
         {
-            u32 line = (total > 5) ? (total - 5 + i) : i;
-            if(App_SDCard_ReadRecordLine(line, buffer, sizeof(buffer)) == 0)
-            {
-                // Extract key info: time, lat, lon, speed
-                char time[16], lat[16], lon[16], speed[16];
-                sscanf(buffer, "%[^,],%[^,],%*c,%[^,],%*c,%[^,]", time, lat, lon, speed);
-
-                char line_display[100];
-                sprintf(line_display, "%lu: %s %.4s,%.4s %skm/h\n",
-                        line + 1, time, lat, lon, speed);
-                strcat(display, line_display);
-            }
+            sprintf(display, "[Recording] data_%03d.csv\n  Records: %d\n  Status: Active\n\nPress 'Stop Log' to finish recording",
+                    g_sdcard_status.record_count / 1000,
+                    g_sdcard_status.record_count);
+        }
+        else if(g_sdcard_status.record_count > 0)
+        {
+            sprintf(display, "[Saved] data_%03d.csv\n  Total records: %d\n  Status: Completed\n\nPress 'Start Log' to create new file",
+                    g_sdcard_status.record_count / 1000,
+                    g_sdcard_status.record_count);
+        }
+        else
+        {
+            sprintf(display, "No files found\n\nPress 'Start Log' to begin\nrecording GPS+IMU data");
         }
 
         lv_label_set_text(label_browse_data, display);
@@ -256,7 +263,7 @@ void App_UI_Main_Create(void)
     tab_home = lv_tabview_add_tab(tabview, "Home");
     tab_gps = lv_tabview_add_tab(tabview, "GPS");
     tab_imu = lv_tabview_add_tab(tabview, "IMU");
-    tab_data = lv_tabview_add_tab(tabview, "Data");
+    tab_files = lv_tabview_add_tab(tabview, "Files");
 
     // ========== Home Tab ==========
     // Title with style
@@ -327,6 +334,16 @@ void App_UI_Main_Create(void)
     lv_label_set_align(footer, LV_LABEL_ALIGN_CENTER);
     lv_obj_align(footer, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -20);
 
+    // Dark mode button for Home tab (bottom right corner)
+    lv_obj_t * btn_dark_home = lv_btn_create(tab_home, NULL);
+    lv_obj_set_size(btn_dark_home, 100, 40);
+    lv_obj_align(btn_dark_home, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, -20, -20);
+    lv_btn_set_style(btn_dark_home, LV_BTN_STYLE_REL, &style_btn_dark);
+    lv_obj_set_event_cb(btn_dark_home, btn_dark_mode_event);
+
+    lv_obj_t * label_dark_home = lv_label_create(btn_dark_home, NULL);
+    lv_label_set_text(label_dark_home, "Dark");
+
     // ========== GPS Tab ==========
 
     lv_obj_t * gps_title = lv_label_create(tab_gps, NULL);
@@ -392,6 +409,16 @@ void App_UI_Main_Create(void)
     lv_label_set_align(gps_info, LV_LABEL_ALIGN_CENTER);
     lv_obj_align(gps_info, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -30);
 
+    // Dark mode button for GPS tab (bottom right corner)
+    lv_obj_t * btn_dark_gps = lv_btn_create(tab_gps, NULL);
+    lv_obj_set_size(btn_dark_gps, 100, 40);
+    lv_obj_align(btn_dark_gps, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, -20, -20);
+    lv_btn_set_style(btn_dark_gps, LV_BTN_STYLE_REL, &style_btn_dark);
+    lv_obj_set_event_cb(btn_dark_gps, btn_dark_mode_event);
+
+    lv_obj_t * label_dark_gps = lv_label_create(btn_dark_gps, NULL);
+    lv_label_set_text(label_dark_gps, "Dark");
+
     // ========== IMU Tab ==========
     // Title (reuse style_title)
     lv_obj_t * imu_title = lv_label_create(tab_imu, NULL);
@@ -439,16 +466,34 @@ void App_UI_Main_Create(void)
     lv_label_set_align(imu_info, LV_LABEL_ALIGN_CENTER);
     lv_obj_align(imu_info, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -30);
 
-    // ========== Data Tab ==========
-    // Motion status indicator
-    label_motion_status = lv_label_create(tab_data, NULL);
-    lv_label_set_text(label_motion_status, "Status: Stationary");
-    lv_obj_align(label_motion_status, NULL, LV_ALIGN_IN_TOP_MID, 0, 20);
+    // Dark mode button for IMU tab (bottom right corner)
+    lv_obj_t * btn_dark_imu = lv_btn_create(tab_imu, NULL);
+    lv_obj_set_size(btn_dark_imu, 100, 40);
+    lv_obj_align(btn_dark_imu, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, -20, -20);
+    lv_btn_set_style(btn_dark_imu, LV_BTN_STYLE_REL, &style_btn_dark);
+    lv_obj_set_event_cb(btn_dark_imu, btn_dark_mode_event);
 
-    // Record count
-    label_record_count = lv_label_create(tab_data, NULL);
-    lv_label_set_text(label_record_count, "Records: 0");
-    lv_obj_align(label_record_count, label_motion_status, LV_ALIGN_OUT_BOTTOM_MID, 0, 15);
+    lv_obj_t * label_dark_imu = lv_label_create(btn_dark_imu, NULL);
+    lv_label_set_text(label_dark_imu, "Dark");
+
+    // ========== Files Tab (File Manager Style) ==========
+    // Title
+    lv_obj_t * files_title = lv_label_create(tab_files, NULL);
+    lv_label_set_text(files_title, "SD Card Files");
+    lv_label_set_style(files_title, LV_LABEL_STYLE_MAIN, &style_title);
+    lv_obj_align(files_title, NULL, LV_ALIGN_IN_TOP_MID, 0, 15);
+
+    // File list area header
+    lv_obj_t * filelist_header = lv_label_create(tab_files, NULL);
+    lv_label_set_text(filelist_header, "Recorded Files:");
+    lv_obj_set_pos(filelist_header, 30, 70);
+
+    // File list display area (like file explorer)
+    label_browse_data = lv_label_create(tab_files, NULL);
+    lv_label_set_text(label_browse_data, "No files found\nPress 'Start Log' to record data");
+    lv_label_set_long_mode(label_browse_data, LV_LABEL_LONG_BREAK);
+    lv_obj_set_width(label_browse_data, 420);
+    lv_obj_set_pos(label_browse_data, 40, 100);
 
     // Initialize button styles
     lv_style_copy(&style_btn_green, &lv_style_plain);
@@ -469,11 +514,15 @@ void App_UI_Main_Create(void)
     style_btn_dark.body.radius = 5;
     style_btn_dark.text.color = LV_COLOR_WHITE;
 
-    // Left column buttons
+    // Recording control buttons
+    lv_obj_t * control_header = lv_label_create(tab_files, NULL);
+    lv_label_set_text(control_header, "Recording Control:");
+    lv_obj_set_pos(control_header, 30, 280);
+
     // Start button (green)
-    btn_start_log = lv_btn_create(tab_data, NULL);
-    lv_obj_set_size(btn_start_log, 150, 50);
-    lv_obj_set_pos(btn_start_log, 30, 100);
+    btn_start_log = lv_btn_create(tab_files, NULL);
+    lv_obj_set_size(btn_start_log, 180, 50);
+    lv_obj_set_pos(btn_start_log, 30, 315);
     lv_btn_set_style(btn_start_log, LV_BTN_STYLE_REL, &style_btn_green);
     lv_obj_set_event_cb(btn_start_log, btn_start_log_event);
 
@@ -481,66 +530,72 @@ void App_UI_Main_Create(void)
     lv_label_set_text(label_start, "Start Log");
 
     // Stop button (red)
-    btn_stop_log = lv_btn_create(tab_data, NULL);
-    lv_obj_set_size(btn_stop_log, 150, 50);
-    lv_obj_set_pos(btn_stop_log, 30, 160);
+    btn_stop_log = lv_btn_create(tab_files, NULL);
+    lv_obj_set_size(btn_stop_log, 180, 50);
+    lv_obj_set_pos(btn_stop_log, 230, 315);
     lv_btn_set_style(btn_stop_log, LV_BTN_STYLE_REL, &style_btn_red);
     lv_obj_set_event_cb(btn_stop_log, btn_stop_log_event);
 
     lv_obj_t * label_stop = lv_label_create(btn_stop_log, NULL);
     lv_label_set_text(label_stop, "Stop Log");
 
-    // Browse button
-    btn_browse_data = lv_btn_create(tab_data, NULL);
-    lv_obj_set_size(btn_browse_data, 150, 50);
-    lv_obj_set_pos(btn_browse_data, 30, 220);
+    // File management buttons
+    lv_obj_t * manage_header = lv_label_create(tab_files, NULL);
+    lv_label_set_text(manage_header, "File Management:");
+    lv_obj_set_pos(manage_header, 30, 385);
+
+    // Browse/Refresh button
+    btn_browse_data = lv_btn_create(tab_files, NULL);
+    lv_obj_set_size(btn_browse_data, 180, 50);
+    lv_obj_set_pos(btn_browse_data, 30, 420);
     lv_btn_set_style(btn_browse_data, LV_BTN_STYLE_REL, &style_btn_dark);
     lv_obj_set_event_cb(btn_browse_data, btn_browse_data_event);
 
     lv_obj_t * label_browse = lv_label_create(btn_browse_data, NULL);
-    lv_label_set_text(label_browse, "Browse");
+    lv_label_set_text(label_browse, "Refresh");
 
-    // Right column buttons
-    // Clear button (red)
-    btn_clear_data = lv_btn_create(tab_data, NULL);
-    lv_obj_set_size(btn_clear_data, 150, 50);
-    lv_obj_set_pos(btn_clear_data, 250, 100);
+    // Delete all button (red)
+    btn_clear_data = lv_btn_create(tab_files, NULL);
+    lv_obj_set_size(btn_clear_data, 180, 50);
+    lv_obj_set_pos(btn_clear_data, 230, 420);
     lv_btn_set_style(btn_clear_data, LV_BTN_STYLE_REL, &style_btn_red);
     lv_obj_set_event_cb(btn_clear_data, btn_clear_data_event);
 
     lv_obj_t * label_clear = lv_label_create(btn_clear_data, NULL);
-    lv_label_set_text(label_clear, "Clear All");
+    lv_label_set_text(label_clear, "Delete All");
 
-    // Dark mode button
-    btn_dark_mode = lv_btn_create(tab_data, NULL);
-    lv_obj_set_size(btn_dark_mode, 150, 50);
-    lv_obj_set_pos(btn_dark_mode, 250, 160);
+    // Statistics display
+    label_statistics = lv_label_create(tab_files, NULL);
+    lv_label_set_text(label_statistics, "Max Speed: 0 km/h | Distance: 0 km");
+    lv_label_set_long_mode(label_statistics, LV_LABEL_LONG_BREAK);
+    lv_obj_set_width(label_statistics, 420);
+    lv_obj_set_pos(label_statistics, 30, 490);
+
+    // Record count and status
+    label_motion_status = lv_label_create(tab_files, NULL);
+    lv_label_set_text(label_motion_status, "Status: Stationary");
+    lv_obj_set_pos(label_motion_status, 30, 515);
+
+    label_record_count = lv_label_create(tab_files, NULL);
+    lv_label_set_text(label_record_count, "Records: 0");
+    lv_obj_set_pos(label_record_count, 250, 515);
+
+    // Last record preview
+    label_last_record = lv_label_create(tab_files, NULL);
+    lv_label_set_text(label_last_record, "Last: --");
+    lv_label_set_long_mode(label_last_record, LV_LABEL_LONG_BREAK);
+    lv_obj_set_width(label_last_record, 420);
+    lv_obj_set_pos(label_last_record, 30, 540);
+
+    // Dark mode button (bottom right corner)
+    btn_dark_mode = lv_btn_create(tab_files, NULL);
+    lv_obj_set_size(btn_dark_mode, 100, 40);
+    lv_obj_align(btn_dark_mode, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, -20, -20);
     lv_btn_set_style(btn_dark_mode, LV_BTN_STYLE_REL, &style_btn_dark);
     lv_obj_set_event_cb(btn_dark_mode, btn_dark_mode_event);
 
     lv_obj_t * label_dark = lv_label_create(btn_dark_mode, NULL);
-    lv_label_set_text(label_dark, "Dark Mode");
-
-    // Statistics display
-    label_statistics = lv_label_create(tab_data, NULL);
-    lv_label_set_text(label_statistics, "Max Speed: 0.00 km/h  Distance: 0.00 km");
-    lv_label_set_long_mode(label_statistics, LV_LABEL_LONG_BREAK);
-    lv_obj_set_width(label_statistics, 420);
-    lv_obj_set_pos(label_statistics, 30, 285);
-
-    // Last record preview
-    label_last_record = lv_label_create(tab_data, NULL);
-    lv_label_set_text(label_last_record, "Last: No data yet");
-    lv_label_set_long_mode(label_last_record, LV_LABEL_LONG_BREAK);
-    lv_obj_set_width(label_last_record, 420);
-    lv_obj_set_pos(label_last_record, 30, 310);
-
-    // Browse data display area
-    label_browse_data = lv_label_create(tab_data, NULL);
-    lv_label_set_text(label_browse_data, "Press 'Browse' to view records");
-    lv_label_set_long_mode(label_browse_data, LV_LABEL_LONG_BREAK);
-    lv_obj_set_width(label_browse_data, 420);
-    lv_obj_set_pos(label_browse_data, 30, 340);
+    lv_label_set_text(label_dark, "Dark");
 }
 
 /**
