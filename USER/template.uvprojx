@@ -1078,6 +1078,11 @@
               <FileType>1</FileType>
               <FilePath>..\APP\app_fusion.c</FilePath>
             </File>
+            <File>
+              <FileName>app_ui_main.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\app_ui_main.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

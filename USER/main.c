@@ -11,10 +11,11 @@
 #include "lv_port_indev.h"
 // #include "app_test.h"      // 阶段1测试界面
 #include "app_gps.h"          // 阶段2: GPS模块
-#include "app_ui_gps.h"       // 阶段2: GPS UI界面
+// #include "app_ui_gps.h"    // 阶段2: GPS UI界面 (replaced by app_ui_main)
 #include "app_mpu.h"          // 阶段3: MPU6050模块
-#include "app_ui_mpu.h"       // 阶段3: MPU6050 UI界面
+// #include "app_ui_mpu.h"    // 阶段3: MPU6050 UI界面 (replaced by app_ui_main)
 #include "app_sdcard.h"       // 阶段4: SD卡数据记录
+#include "app_ui_main.h"      // 阶段6: 新UI界面
 
 int main(void)
 { 
@@ -34,16 +35,16 @@ int main(void)
 
 	// ========== 阶段2: GPS模块测试 ==========
 	App_GPS_Init();       // 初始化GPS模块
-	App_UI_GPS_Create();  // 创建GPS界面
 
 	// ========== 阶段3: MPU6050模块测试 ==========
 	App_MPU_Init();       // 初始化MPU6050模块
-	App_UI_MPU_Create();  // 创建MPU6050界面
 
 	// ========== 阶段4: SD卡数据记录 ==========
 	App_SDCard_Init();    // 初始化SD卡
 	delay_ms(500);        // 等待SD卡初始化
-	App_SDCard_StartLog();// 开始数据记录
+
+	// ========== 阶段6: 创建新UI界面 ==========
+	App_UI_Main_Create(); // 创建带选项卡的UI
 
 	u16 ui_update_counter = 0;
 	u16 log_counter = 0;
@@ -64,8 +65,7 @@ int main(void)
 		if(ui_update_counter >= 200)
 		{
 			ui_update_counter = 0;
-			App_UI_GPS_Update();  // 更新GPS UI显示
-			App_UI_MPU_Update();  // 更新MPU UI显示
+			App_UI_Main_Update();  // 更新新UI显示
 			LED0 = !LED0;         // LED闪烁指示运行
 		}
 
