@@ -114,6 +114,16 @@ void App_SDCard_WriteData(void)
     {
         g_sdcard_status.record_count++;
 
+        // Update last record cache for preview
+        sprintf(g_sdcard_status.last_record.time_str, "%02d:%02d:%02d",
+                g_gps_data.hour, g_gps_data.minute, g_gps_data.second);
+        g_sdcard_status.last_record.latitude = g_gps_data.latitude;
+        g_sdcard_status.last_record.lat_dir = g_gps_data.lat_dir;
+        g_sdcard_status.last_record.longitude = g_gps_data.longitude;
+        g_sdcard_status.last_record.lon_dir = g_gps_data.lon_dir;
+        g_sdcard_status.last_record.speed = g_gps_data.speed_kmh;
+        g_sdcard_status.last_record.altitude = g_gps_data.altitude;
+
         // Sync every 10 records to prevent data loss
         if(g_sdcard_status.record_count % 10 == 0)
         {
