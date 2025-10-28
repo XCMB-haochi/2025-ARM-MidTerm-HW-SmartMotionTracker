@@ -132,6 +132,12 @@ static void btn_dark_mode_event(lv_obj_t * obj, lv_event_t event)
             lv_obj_set_style(tab_gps, &style_dark_tab);
             lv_obj_set_style(tab_imu, &style_dark_tab);
             lv_obj_set_style(tab_files, &style_dark_tab);
+
+            // Update button labels
+            lv_label_set_text(label_dark_home, "Light");
+            lv_label_set_text(label_dark_gps, "Light");
+            lv_label_set_text(label_dark_imu, "Light");
+            lv_label_set_text(label_dark_files, "Light");
         }
         else
         {
@@ -162,6 +168,12 @@ static void btn_dark_mode_event(lv_obj_t * obj, lv_event_t event)
             lv_obj_set_style(tab_gps, &style_light_tab);
             lv_obj_set_style(tab_imu, &style_light_tab);
             lv_obj_set_style(tab_files, &style_light_tab);
+
+            // Update button labels
+            lv_label_set_text(label_dark_home, "Dark");
+            lv_label_set_text(label_dark_gps, "Dark");
+            lv_label_set_text(label_dark_imu, "Dark");
+            lv_label_set_text(label_dark_files, "Dark");
         }
     }
 }
@@ -265,6 +277,25 @@ void App_UI_Main_Create(void)
     tab_imu = lv_tabview_add_tab(tabview, "IMU");
     tab_files = lv_tabview_add_tab(tabview, "Files");
 
+    // Initialize button styles (before creating any buttons)
+    lv_style_copy(&style_btn_green, &lv_style_plain);
+    style_btn_green.body.main_color = LV_COLOR_GREEN;
+    style_btn_green.body.grad_color = LV_COLOR_GREEN;
+    style_btn_green.body.radius = 5;
+    style_btn_green.text.color = LV_COLOR_WHITE;
+
+    lv_style_copy(&style_btn_red, &lv_style_plain);
+    style_btn_red.body.main_color = LV_COLOR_RED;
+    style_btn_red.body.grad_color = LV_COLOR_RED;
+    style_btn_red.body.radius = 5;
+    style_btn_red.text.color = LV_COLOR_WHITE;
+
+    lv_style_copy(&style_btn_dark, &lv_style_plain);
+    style_btn_dark.body.main_color = LV_COLOR_MAKE(50, 50, 50);
+    style_btn_dark.body.grad_color = LV_COLOR_MAKE(30, 30, 30);
+    style_btn_dark.body.radius = 5;
+    style_btn_dark.text.color = LV_COLOR_WHITE;
+
     // ========== Home Tab ==========
     // Title with style
     static lv_style_t style_title;
@@ -336,12 +367,12 @@ void App_UI_Main_Create(void)
 
     // Dark mode button for Home tab (bottom right corner)
     lv_obj_t * btn_dark_home = lv_btn_create(tab_home, NULL);
-    lv_obj_set_size(btn_dark_home, 100, 40);
+    lv_obj_set_size(btn_dark_home, 70, 40);
     lv_obj_align(btn_dark_home, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, -20, -20);
     lv_btn_set_style(btn_dark_home, LV_BTN_STYLE_REL, &style_btn_dark);
     lv_obj_set_event_cb(btn_dark_home, btn_dark_mode_event);
 
-    lv_obj_t * label_dark_home = lv_label_create(btn_dark_home, NULL);
+    label_dark_home = lv_label_create(btn_dark_home, NULL);
     lv_label_set_text(label_dark_home, "Dark");
 
     // ========== GPS Tab ==========
@@ -411,12 +442,12 @@ void App_UI_Main_Create(void)
 
     // Dark mode button for GPS tab (bottom right corner)
     lv_obj_t * btn_dark_gps = lv_btn_create(tab_gps, NULL);
-    lv_obj_set_size(btn_dark_gps, 100, 40);
+    lv_obj_set_size(btn_dark_gps, 70, 40);
     lv_obj_align(btn_dark_gps, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, -20, -20);
     lv_btn_set_style(btn_dark_gps, LV_BTN_STYLE_REL, &style_btn_dark);
     lv_obj_set_event_cb(btn_dark_gps, btn_dark_mode_event);
 
-    lv_obj_t * label_dark_gps = lv_label_create(btn_dark_gps, NULL);
+    label_dark_gps = lv_label_create(btn_dark_gps, NULL);
     lv_label_set_text(label_dark_gps, "Dark");
 
     // ========== IMU Tab ==========
@@ -468,12 +499,12 @@ void App_UI_Main_Create(void)
 
     // Dark mode button for IMU tab (bottom right corner)
     lv_obj_t * btn_dark_imu = lv_btn_create(tab_imu, NULL);
-    lv_obj_set_size(btn_dark_imu, 100, 40);
+    lv_obj_set_size(btn_dark_imu, 70, 40);
     lv_obj_align(btn_dark_imu, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, -20, -20);
     lv_btn_set_style(btn_dark_imu, LV_BTN_STYLE_REL, &style_btn_dark);
     lv_obj_set_event_cb(btn_dark_imu, btn_dark_mode_event);
 
-    lv_obj_t * label_dark_imu = lv_label_create(btn_dark_imu, NULL);
+    label_dark_imu = lv_label_create(btn_dark_imu, NULL);
     lv_label_set_text(label_dark_imu, "Dark");
 
     // ========== Files Tab (File Manager Style) ==========
@@ -494,25 +525,6 @@ void App_UI_Main_Create(void)
     lv_label_set_long_mode(label_browse_data, LV_LABEL_LONG_BREAK);
     lv_obj_set_width(label_browse_data, 420);
     lv_obj_set_pos(label_browse_data, 40, 100);
-
-    // Initialize button styles
-    lv_style_copy(&style_btn_green, &lv_style_plain);
-    style_btn_green.body.main_color = LV_COLOR_GREEN;
-    style_btn_green.body.grad_color = LV_COLOR_GREEN;
-    style_btn_green.body.radius = 5;
-    style_btn_green.text.color = LV_COLOR_WHITE;
-
-    lv_style_copy(&style_btn_red, &lv_style_plain);
-    style_btn_red.body.main_color = LV_COLOR_RED;
-    style_btn_red.body.grad_color = LV_COLOR_RED;
-    style_btn_red.body.radius = 5;
-    style_btn_red.text.color = LV_COLOR_WHITE;
-
-    lv_style_copy(&style_btn_dark, &lv_style_plain);
-    style_btn_dark.body.main_color = LV_COLOR_MAKE(50, 50, 50);
-    style_btn_dark.body.grad_color = LV_COLOR_MAKE(30, 30, 30);
-    style_btn_dark.body.radius = 5;
-    style_btn_dark.text.color = LV_COLOR_WHITE;
 
     // Recording control buttons
     lv_obj_t * control_header = lv_label_create(tab_files, NULL);
@@ -589,13 +601,13 @@ void App_UI_Main_Create(void)
 
     // Dark mode button (bottom right corner)
     btn_dark_mode = lv_btn_create(tab_files, NULL);
-    lv_obj_set_size(btn_dark_mode, 100, 40);
+    lv_obj_set_size(btn_dark_mode, 70, 40);
     lv_obj_align(btn_dark_mode, NULL, LV_ALIGN_IN_BOTTOM_RIGHT, -20, -20);
     lv_btn_set_style(btn_dark_mode, LV_BTN_STYLE_REL, &style_btn_dark);
     lv_obj_set_event_cb(btn_dark_mode, btn_dark_mode_event);
 
-    lv_obj_t * label_dark = lv_label_create(btn_dark_mode, NULL);
-    lv_label_set_text(label_dark, "Dark");
+    label_dark_files = lv_label_create(btn_dark_mode, NULL);
+    lv_label_set_text(label_dark_files, "Dark");
 }
 
 /**
