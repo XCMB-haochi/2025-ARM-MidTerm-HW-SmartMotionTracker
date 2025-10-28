@@ -1,5 +1,6 @@
 #include "app_ui_gps.h"
 #include "app_gps.h"
+#include "app_sdcard.h"
 #include "lv_conf.h"
 #include <stdio.h>
 
@@ -11,6 +12,7 @@ static lv_obj_t * label_speed;       // 速度标签
 static lv_obj_t * label_altitude;    // 海拔标签
 static lv_obj_t * label_satellites;  // 卫星数标签
 static lv_obj_t * label_time;        // 时间标签
+static lv_obj_t * label_sdcard;      // SD卡状态标签
 
 /**
  * 创建GPS测试界面
@@ -95,15 +97,15 @@ void App_UI_GPS_Create(void)
     lv_label_set_text(label_time, "UTC Time:  --:--:--");
     lv_obj_align(label_time, NULL, LV_ALIGN_IN_TOP_LEFT, 15, y_offset);
 
-    // ========== 底部状态提示 ==========
-    lv_obj_t * hint = lv_label_create(scr, NULL);
-    lv_label_set_text(hint, "Stage 2: GPS module working!");
+    // ========== 底部SD卡状态 ==========
+    label_sdcard = lv_label_create(scr, NULL);
+    lv_label_set_text(label_sdcard, "SD: Initializing...");
 
-    static lv_style_t hint_style;
-    lv_style_copy(&hint_style, &lv_style_plain);
-    hint_style.text.color = LV_COLOR_GREEN;
-    lv_label_set_style(hint, LV_LABEL_STYLE_MAIN, &hint_style);
-    lv_obj_align(hint, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -10);
+    static lv_style_t sdcard_style;
+    lv_style_copy(&sdcard_style, &lv_style_plain);
+    sdcard_style.text.color = LV_COLOR_ORANGE;
+    lv_label_set_style(label_sdcard, LV_LABEL_STYLE_MAIN, &sdcard_style);
+    lv_obj_align(label_sdcard, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -720);
 }
 
 /**
@@ -150,5 +152,20 @@ void App_UI_GPS_Update(void)
     {
         // GPS未定位
         lv_label_set_text(label_status, "GPS Status: Searching...");
+    }
+
+    // 更新SD卡状态
+    if(g_sdcard_status.initialized == 0)
+    {
+        lv_label_set_text(label_sdcard, "SD: Not Ready");
+    }
+    else if(g_sdcard_status.logging)
+    {
+        sprintf(buf, "SD: Logging... Records:%d", g_sdcard_status.record_count);
+        lv_label_set_text(label_sdcard, buf);
+    }
+    else
+    {
+        lv_label_set_text(label_sdcard, "SD: Ready (Not Logging)");
     }
 }
