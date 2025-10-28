@@ -2,8 +2,10 @@
 #include "app_gps.h"
 #include "app_mpu.h"
 #include "app_sdcard.h"
+#include "ff.h"
 #include <stdio.h>
 #include <math.h>
+#include <string.h>
 
 // UI objects
 static lv_obj_t * tabview;
@@ -188,8 +190,11 @@ static void btn_browse_data_event(lv_obj_t * obj, lv_event_t event)
 {
     if(event == LV_EVENT_CLICKED)
     {
-        char buffer[200];
-        char display[500];
+        FIL test_file;
+        FRESULT fres;
+        char filename[32];
+        char display[800];
+        u16 file_count = 0;
 
         // Check if SD card is initialized
         if(g_sdcard_status.initialized == 0)
@@ -198,22 +203,44 @@ static void btn_browse_data_event(lv_obj_t * obj, lv_event_t event)
             return;
         }
 
-        // Display file list (simulated - showing current recording status)
+        // Scan for existing files
+        strcpy(display, "Files on SD Card:\n\n");
+
+        for(u16 i = 0; i < 100; i++)
+        {
+            sprintf(filename, "0:/data_%03d.csv", i);
+            fres = f_open(&test_file, filename, FA_READ);
+            if(fres == FR_OK)
+            {
+                // File exists, get size
+                DWORD file_size = f_size(&test_file);
+                f_close(&test_file);
+
+                char line[80];
+                sprintf(line, "data_%03d.csv  (%lu bytes)\n", i, file_size);
+                strcat(display, line);
+                file_count++;
+
+                // Limit display to 10 files to avoid overflow
+                if(file_count >= 10)
+                {
+                    strcat(display, "\n... (more files exist)");
+                    break;
+                }
+            }
+        }
+
+        // Show current recording status
         if(g_sdcard_status.logging)
         {
-            sprintf(display, "[Recording] data_%03d.csv\n  Records: %d\n  Status: Active\n\nPress 'Stop Log' to finish recording",
-                    g_sdcard_status.record_count / 1000,
-                    g_sdcard_status.record_count);
+            char status[80];
+            sprintf(status, "\n[Recording Now]\nCurrent: %d records", g_sdcard_status.record_count);
+            strcat(display, status);
         }
-        else if(g_sdcard_status.record_count > 0)
+
+        if(file_count == 0)
         {
-            sprintf(display, "[Saved] data_%03d.csv\n  Total records: %d\n  Status: Completed\n\nPress 'Start Log' to create new file",
-                    g_sdcard_status.record_count / 1000,
-                    g_sdcard_status.record_count);
-        }
-        else
-        {
-            sprintf(display, "No files found\n\nPress 'Start Log' to begin\nrecording GPS+IMU data");
+            strcpy(display, "No files found\n\nPress 'Start Log' to begin\nrecording GPS+IMU data");
         }
 
         lv_label_set_text(label_browse_data, display);
