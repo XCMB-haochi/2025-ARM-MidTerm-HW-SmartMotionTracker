@@ -30,4 +30,9 @@ void App_SDCard_StartLog(void);
 void App_SDCard_StopLog(void);
 void App_SDCard_WriteData(void);
 
+// Browse and manage functions
+u8 App_SDCard_ClearAllData(void);  // Clear all CSV files, return 0=success
+u32 App_SDCard_GetTotalRecords(void);  // Get total record count in file
+u8 App_SDCard_ReadRecordLine(u32 line_num, char* buffer, u16 buf_size);  // Read specific line
+
 #endif

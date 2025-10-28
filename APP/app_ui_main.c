@@ -7,6 +7,7 @@
 
 // UI objects
 static lv_obj_t * tabview;
+static lv_obj_t * tab_home;
 static lv_obj_t * tab_gps;
 static lv_obj_t * tab_imu;
 static lv_obj_t * tab_data;
@@ -35,11 +36,14 @@ static lv_obj_t * label_temp;
 static lv_obj_t * btn_start_log;
 static lv_obj_t * btn_stop_log;
 static lv_obj_t * btn_dark_mode;
+static lv_obj_t * btn_browse_data;
+static lv_obj_t * btn_clear_data;
 static lv_obj_t * label_record_count;
 static lv_obj_t * label_motion_status;
 static lv_obj_t * label_track_info;
 static lv_obj_t * label_last_record;  // Preview last recorded data
 static lv_obj_t * label_statistics;    // Statistics display
+static lv_obj_t * label_browse_data;   // Browse data display
 
 // Button styles
 static lv_style_t style_btn_green;
@@ -154,6 +158,63 @@ static void btn_dark_mode_event(lv_obj_t * obj, lv_event_t event)
     }
 }
 
+static void btn_browse_data_event(lv_obj_t * obj, lv_event_t event)
+{
+    if(event == LV_EVENT_CLICKED)
+    {
+        char buffer[200];
+        char display[400];
+        u32 total = App_SDCard_GetTotalRecords();
+
+        if(total == 0)
+        {
+            lv_label_set_text(label_browse_data, "No records to display");
+            return;
+        }
+
+        // Display last 5 records
+        sprintf(display, "Last 5 Records (Total: %lu):\n", total);
+
+        for(u32 i = 0; i < 5 && i < total; i++)
+        {
+            u32 line = (total > 5) ? (total - 5 + i) : i;
+            if(App_SDCard_ReadRecordLine(line, buffer, sizeof(buffer)) == 0)
+            {
+                // Extract key info: time, lat, lon, speed
+                char time[16], lat[16], lon[16], speed[16];
+                sscanf(buffer, "%[^,],%[^,],%*c,%[^,],%*c,%[^,]", time, lat, lon, speed);
+
+                char line_display[100];
+                sprintf(line_display, "%lu: %s %.4s,%.4s %skm/h\n",
+                        line + 1, time, lat, lon, speed);
+                strcat(display, line_display);
+            }
+        }
+
+        lv_label_set_text(label_browse_data, display);
+    }
+}
+
+static void btn_clear_data_event(lv_obj_t * obj, lv_event_t event)
+{
+    if(event == LV_EVENT_CLICKED)
+    {
+        if(App_SDCard_ClearAllData() == 0)
+        {
+            lv_label_set_text(label_browse_data, "All data cleared!");
+            // Reset statistics
+            max_speed = 0.0f;
+            max_altitude = 0.0f;
+            total_distance = 0.0f;
+            stats_initialized = 0;
+        }
+        else
+        {
+            lv_label_set_text(label_browse_data, "Failed to clear data");
+        }
+    }
+}
+
 /**
  * @brief Create main UI with tabview
  */
@@ -192,16 +253,81 @@ void App_UI_Main_Create(void)
     lv_obj_align(tabview, status_bar, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
 
     // Create tabs
+    tab_home = lv_tabview_add_tab(tabview, "Home");
     tab_gps = lv_tabview_add_tab(tabview, "GPS");
     tab_imu = lv_tabview_add_tab(tabview, "IMU");
     tab_data = lv_tabview_add_tab(tabview, "Data");
 
-    // ========== GPS Tab ==========
+    // ========== Home Tab ==========
     // Title with style
     static lv_style_t style_title;
     lv_style_copy(&style_title, &lv_style_plain);
     style_title.text.font = &lv_font_roboto_28;
     style_title.text.color = LV_COLOR_MAKE(0, 120, 215);  // Blue
+
+    lv_obj_t * home_title = lv_label_create(tab_home, NULL);
+    lv_label_set_text(home_title, "Smart Motion Tracker");
+    lv_label_set_style(home_title, LV_LABEL_STYLE_MAIN, &style_title);
+    lv_obj_align(home_title, NULL, LV_ALIGN_IN_TOP_MID, 0, 20);
+
+    // Product description
+    static lv_style_t style_desc;
+    lv_style_copy(&style_desc, &lv_style_plain);
+    style_desc.text.font = &lv_font_roboto_16;
+    style_desc.text.color = LV_COLOR_MAKE(60, 60, 60);
+
+    lv_obj_t * home_desc = lv_label_create(tab_home, NULL);
+    lv_label_set_text(home_desc, "Vehicle Motion Data Logger");
+    lv_label_set_style(home_desc, LV_LABEL_STYLE_MAIN, &style_desc);
+    lv_obj_align(home_desc, home_title, LV_ALIGN_OUT_BOTTOM_MID, 0, 10);
+
+    // Feature list with icons (using text symbols)
+    lv_obj_t * feature_title = lv_label_create(tab_home, NULL);
+    lv_label_set_text(feature_title, "Features:");
+    lv_label_set_style(feature_title, LV_LABEL_STYLE_MAIN, &style_title);
+    lv_obj_set_pos(feature_title, 30, 100);
+
+    lv_obj_t * features = lv_label_create(tab_home, NULL);
+    lv_label_set_text(features,
+        "> GPS Position Tracking\n"
+        "  Real-time latitude, longitude, speed\n\n"
+        "> Motion Sensing (MPU6050)\n"
+        "  Pitch, Roll, Yaw angles\n\n"
+        "> Data Recording to SD Card\n"
+        "  CSV format, easy to analyze\n\n"
+        "> On-Screen Data Browsing\n"
+        "  No card reader needed!"
+    );
+    lv_obj_set_pos(features, 40, 135);
+
+    // Quick start guide
+    lv_obj_t * guide_title = lv_label_create(tab_home, NULL);
+    lv_label_set_text(guide_title, "Quick Start:");
+    lv_label_set_style(guide_title, LV_LABEL_STYLE_MAIN, &style_title);
+    lv_obj_set_pos(guide_title, 30, 380);
+
+    lv_obj_t * guide = lv_label_create(tab_home, NULL);
+    lv_label_set_text(guide,
+        "1. Check GPS status (top-right)\n"
+        "2. Go to 'Data' tab\n"
+        "3. Press 'Start Log' button\n"
+        "4. Move/Drive around\n"
+        "5. Press 'Browse' to view data"
+    );
+    lv_obj_set_pos(guide, 40, 415);
+
+    // Project info footer
+    static lv_style_t style_footer;
+    lv_style_copy(&style_footer, &lv_style_plain);
+    style_footer.text.color = LV_COLOR_MAKE(120, 120, 120);
+
+    lv_obj_t * footer = lv_label_create(tab_home, NULL);
+    lv_label_set_text(footer, "UJS Embedded Dev - Fall 2025");
+    lv_label_set_style(footer, LV_LABEL_STYLE_MAIN, &style_footer);
+    lv_label_set_align(footer, LV_LABEL_ALIGN_CENTER);
+    lv_obj_align(footer, NULL, LV_ALIGN_IN_BOTTOM_MID, 0, -20);
+
+    // ========== GPS Tab ==========
 
     lv_obj_t * gps_title = lv_label_create(tab_gps, NULL);
     lv_label_set_text(gps_title, "GPS Navigation");
@@ -343,54 +469,78 @@ void App_UI_Main_Create(void)
     style_btn_dark.body.radius = 5;
     style_btn_dark.text.color = LV_COLOR_WHITE;
 
+    // Left column buttons
     // Start button (green)
     btn_start_log = lv_btn_create(tab_data, NULL);
-    lv_obj_set_size(btn_start_log, 200, 60);
-    lv_obj_align(btn_start_log, label_record_count, LV_ALIGN_OUT_BOTTOM_MID, 0, 30);
+    lv_obj_set_size(btn_start_log, 150, 50);
+    lv_obj_set_pos(btn_start_log, 30, 100);
     lv_btn_set_style(btn_start_log, LV_BTN_STYLE_REL, &style_btn_green);
     lv_obj_set_event_cb(btn_start_log, btn_start_log_event);
 
     lv_obj_t * label_start = lv_label_create(btn_start_log, NULL);
-    lv_label_set_text(label_start, "Start Logging");
+    lv_label_set_text(label_start, "Start Log");
 
     // Stop button (red)
     btn_stop_log = lv_btn_create(tab_data, NULL);
-    lv_obj_set_size(btn_stop_log, 200, 60);
-    lv_obj_align(btn_stop_log, btn_start_log, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+    lv_obj_set_size(btn_stop_log, 150, 50);
+    lv_obj_set_pos(btn_stop_log, 30, 160);
     lv_btn_set_style(btn_stop_log, LV_BTN_STYLE_REL, &style_btn_red);
     lv_obj_set_event_cb(btn_stop_log, btn_stop_log_event);
 
     lv_obj_t * label_stop = lv_label_create(btn_stop_log, NULL);
-    lv_label_set_text(label_stop, "Stop Logging");
+    lv_label_set_text(label_stop, "Stop Log");
+
+    // Browse button
+    btn_browse_data = lv_btn_create(tab_data, NULL);
+    lv_obj_set_size(btn_browse_data, 150, 50);
+    lv_obj_set_pos(btn_browse_data, 30, 220);
+    lv_btn_set_style(btn_browse_data, LV_BTN_STYLE_REL, &style_btn_dark);
+    lv_obj_set_event_cb(btn_browse_data, btn_browse_data_event);
+
+    lv_obj_t * label_browse = lv_label_create(btn_browse_data, NULL);
+    lv_label_set_text(label_browse, "Browse");
+
+    // Right column buttons
+    // Clear button (red)
+    btn_clear_data = lv_btn_create(tab_data, NULL);
+    lv_obj_set_size(btn_clear_data, 150, 50);
+    lv_obj_set_pos(btn_clear_data, 250, 100);
+    lv_btn_set_style(btn_clear_data, LV_BTN_STYLE_REL, &style_btn_red);
+    lv_obj_set_event_cb(btn_clear_data, btn_clear_data_event);
+
+    lv_obj_t * label_clear = lv_label_create(btn_clear_data, NULL);
+    lv_label_set_text(label_clear, "Clear All");
 
     // Dark mode button
     btn_dark_mode = lv_btn_create(tab_data, NULL);
-    lv_obj_set_size(btn_dark_mode, 200, 50);
-    lv_obj_align(btn_dark_mode, btn_stop_log, LV_ALIGN_OUT_BOTTOM_MID, 0, 30);
+    lv_obj_set_size(btn_dark_mode, 150, 50);
+    lv_obj_set_pos(btn_dark_mode, 250, 160);
     lv_btn_set_style(btn_dark_mode, LV_BTN_STYLE_REL, &style_btn_dark);
     lv_obj_set_event_cb(btn_dark_mode, btn_dark_mode_event);
 
     lv_obj_t * label_dark = lv_label_create(btn_dark_mode, NULL);
     lv_label_set_text(label_dark, "Dark Mode");
 
-    // Track info
-    label_track_info = lv_label_create(tab_data, NULL);
-    lv_label_set_text(label_track_info, "Track: Recording GPS+IMU data\nFormat: CSV (Time,Lat,Lon,Speed,\n        Alt,Sats,Pitch,Roll,Yaw)");
-    lv_obj_align(label_track_info, btn_dark_mode, LV_ALIGN_OUT_BOTTOM_MID, 0, 30);
-
     // Statistics display
     label_statistics = lv_label_create(tab_data, NULL);
-    lv_label_set_text(label_statistics, "Statistics:\nMax Speed: 0.00 km/h\nMax Altitude: 0.0 m\nDistance: 0.00 km");
+    lv_label_set_text(label_statistics, "Max Speed: 0.00 km/h  Distance: 0.00 km");
     lv_label_set_long_mode(label_statistics, LV_LABEL_LONG_BREAK);
-    lv_obj_set_width(label_statistics, 440);
-    lv_obj_align(label_statistics, label_track_info, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+    lv_obj_set_width(label_statistics, 420);
+    lv_obj_set_pos(label_statistics, 30, 285);
 
-    // Last record preview (shows SD card is working)
+    // Last record preview
     label_last_record = lv_label_create(tab_data, NULL);
-    lv_label_set_text(label_last_record, "Last Record: No data yet");
+    lv_label_set_text(label_last_record, "Last: No data yet");
     lv_label_set_long_mode(label_last_record, LV_LABEL_LONG_BREAK);
-    lv_obj_set_width(label_last_record, 440);
-    lv_obj_align(label_last_record, label_statistics, LV_ALIGN_OUT_BOTTOM_MID, 0, 20);
+    lv_obj_set_width(label_last_record, 420);
+    lv_obj_set_pos(label_last_record, 30, 310);
+
+    // Browse data display area
+    label_browse_data = lv_label_create(tab_data, NULL);
+    lv_label_set_text(label_browse_data, "Press 'Browse' to view records");
+    lv_label_set_long_mode(label_browse_data, LV_LABEL_LONG_BREAK);
+    lv_obj_set_width(label_browse_data, 420);
+    lv_obj_set_pos(label_browse_data, 30, 340);
 }
 
 /**
@@ -522,27 +672,24 @@ void App_UI_Main_Update(void)
         stats_initialized = 1;
     }
 
-    // Display statistics
-    sprintf(buf, "Statistics:\nMax Speed: %.2f km/h\nMax Altitude: %.1f m\nDistance: %.2f km",
-            max_speed, max_altitude, total_distance);
+    // Display statistics (single line to avoid overlap)
+    sprintf(buf, "Max Speed: %.2f km/h  Distance: %.2f km",
+            max_speed, total_distance);
     lv_label_set_text(label_statistics, buf);
 
-    // Update last record preview
+    // Update last record preview (simplified)
     if(g_sdcard_status.record_count > 0)
     {
-        sprintf(buf, "Last Record: %s\nLat:%.5f%c Lon:%.5f%c\nSpeed:%.2f km/h Alt:%.1fm",
+        sprintf(buf, "Last: %s Lat:%.4f Lon:%.4f %.1fkm/h",
                 g_sdcard_status.last_record.time_str,
                 g_sdcard_status.last_record.latitude,
-                g_sdcard_status.last_record.lat_dir,
                 g_sdcard_status.last_record.longitude,
-                g_sdcard_status.last_record.lon_dir,
-                g_sdcard_status.last_record.speed,
-                g_sdcard_status.last_record.altitude);
+                g_sdcard_status.last_record.speed);
         lv_label_set_text(label_last_record, buf);
     }
     else
     {
-        lv_label_set_text(label_last_record, "Last Record: No data yet");
+        lv_label_set_text(label_last_record, "Last: No data yet");
     }
 }
 

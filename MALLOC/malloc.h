@@ -48,8 +48,6 @@
 #define MEM3_BLOCK_SIZE			32  	  						//内存块大小为32字节
 #define MEM3_MAX_SIZE			60 *1024  						//最大管理内存60K
 #define MEM3_ALLOC_TABLE_SIZE	MEM3_MAX_SIZE/MEM3_BLOCK_SIZE 	//内存表大小
-		 
-
 
 //内存管理控制器
 struct _m_mallco_dev

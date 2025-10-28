@@ -9,13 +9,11 @@
 #include "lvgl.h"
 #include "lv_port_disp.h"
 #include "lv_port_indev.h"
-// #include "app_test.h"      // 阶段1测试界面
-#include "app_gps.h"          // 阶段2: GPS模块
-// #include "app_ui_gps.h"    // 阶段2: GPS UI界面 (replaced by app_ui_main)
-#include "app_mpu.h"          // 阶段3: MPU6050模块
-// #include "app_ui_mpu.h"    // 阶段3: MPU6050 UI界面 (replaced by app_ui_main)
-#include "app_sdcard.h"       // 阶段4: SD卡数据记录
-#include "app_ui_main.h"      // 阶段6: 新UI界面
+#include "app_gps.h"          // GPS模块
+#include "app_mpu.h"          // MPU6050模块
+#include "app_sdcard.h"       // SD卡数据记录
+#include "app_ui_splash.h"    // 启动界面
+#include "app_ui_main.h"      // 主UI界面
 
 int main(void)
 { 
@@ -33,18 +31,25 @@ int main(void)
 	lv_port_disp_init();	//lvgl��ʾ�ӿڳ�ʼ��,����lv_init()�ĺ���
 	lv_port_indev_init();	//lvgl����ӿڳ�ʼ��,����lv_init()�ĺ���
 
-	// ========== 阶段2: GPS模块测试 ==========
+	// ========== Show Splash Screen ==========
+	App_UI_Splash_Create();   // Display splash screen
+
+	u16 splash_counter = 0;
+	while(splash_counter < 2000)  // Show for 2 seconds
+	{
+		tp_dev.scan(0);
+		lv_task_handler();
+		delay_ms(1);
+		splash_counter++;
+	}
+
+	App_UI_Splash_Close();    // Close splash and create main UI
+
+	// ========== Initialize Hardware Modules ==========
 	App_GPS_Init();       // 初始化GPS模块
-
-	// ========== 阶段3: MPU6050模块测试 ==========
 	App_MPU_Init();       // 初始化MPU6050模块
-
-	// ========== 阶段4: SD卡数据记录 ==========
 	App_SDCard_Init();    // 初始化SD卡
 	delay_ms(500);        // 等待SD卡初始化
-
-	// ========== 阶段6: 创建新UI界面 ==========
-	App_UI_Main_Create(); // 创建带选项卡的UI
 
 	u16 ui_update_counter = 0;
 	u16 log_counter = 0;

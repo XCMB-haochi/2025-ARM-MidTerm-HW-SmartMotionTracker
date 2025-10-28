@@ -339,7 +339,7 @@
               <MiscControls>--diag_suppress=68  --diag_suppress=111  --diag_suppress=550</MiscControls>
               <Define>STM32F40_41xxx,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\HARDWARE\LED;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\IIC;..\HARDWARE\24CXX;..\FWLIB\inc;..\HARDWARE\TOUCH;..\HARDWARE\TIMER;..\GUI;..\GUI\lvgl;..\GUI\lv_examples;..\GUI\lvgl_driver;..\APP;..\HARDWARE\GPS;..\HARDWARE\USART3;..\HARDWARE\MPU6050;..\HARDWARE\MPU6050\eMPL;..\HARDWARE\IIC;..\FATFS\src;..\FATFS\exfuns;..\HARDWARE\SDIO;..\HARDWARE\SPI;..\HARDWARE\SRAM;..\USMART;..\MALLOC;..\HARDWARE\W25QXX</IncludePath>
+              <IncludePath>..\CORE;..\SYSTEM\delay;..\SYSTEM\sys;..\SYSTEM\usart;..\USER;..\HARDWARE\LED;..\HARDWARE\LCD;..\HARDWARE\KEY;..\HARDWARE\IIC;..\HARDWARE\24CXX;..\FWLIB\inc;..\HARDWARE\TOUCH;..\HARDWARE\TIMER;..\GUI;..\GUI\lvgl;..\GUI\lv_examples;..\GUI\lvgl_driver;..\APP;..\HARDWARE\GPS;..\HARDWARE\USART3;..\HARDWARE\MPU6050;..\HARDWARE\MPU6050\eMPL;..\HARDWARE\IIC;..\FATFS\src;..\FATFS\exfuns;..\HARDWARE\SDIO;..\HARDWARE\SPI;..\HARDWARE\SRAM;..\USMART;..\MALLOC;..\HARDWARE\W25QXX;..\IMAGES</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1083,6 +1083,11 @@
               <FileType>1</FileType>
               <FilePath>..\APP\app_ui_main.c</FilePath>
             </File>
+            <File>
+              <FileName>app_ui_splash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\APP\app_ui_splash.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1142,6 +1147,16 @@
               <FileName>malloc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\MALLOC\malloc.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>IMAGES</GroupName>
+          <Files>
+            <File>
+              <FileName>logo_image.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\IMAGES\logo_image.c</FilePath>
             </File>
           </Files>
         </Group>

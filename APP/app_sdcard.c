@@ -131,3 +131,100 @@ void App_SDCard_WriteData(void)
         }
     }
 }
+
+/**
+ * @brief Clear all data files from SD card
+ * @return 0 on success, 1 on failure
+ */
+u8 App_SDCard_ClearAllData(void)
+{
+    FRESULT res;
+
+    if(g_sdcard_status.initialized == 0)
+        return 1;
+
+    // Stop logging if active
+    if(g_sdcard_status.logging)
+        App_SDCard_StopLog();
+
+    // Delete all data_*.csv files (up to 100 files)
+    for(u16 i = 0; i < 100; i++)
+    {
+        char filename[32];
+        sprintf(filename, "0:/data_%03d.csv", i);
+        f_unlink(filename);  // Delete file (ignore errors if not exist)
+    }
+
+    g_sdcard_status.record_count = 0;
+    return 0;
+}
+
+/**
+ * @brief Get total number of records in current log file
+ * @return Number of records (lines minus header)
+ */
+u32 App_SDCard_GetTotalRecords(void)
+{
+    FIL file;
+    FRESULT res;
+    char buffer[200];
+    u32 count = 0;
+
+    if(g_sdcard_status.initialized == 0)
+        return 0;
+
+    // Open current log file for reading
+    res = f_open(&file, log_filename, FA_READ);
+    if(res != FR_OK)
+        return 0;
+
+    // Count lines (skip header)
+    while(f_gets(buffer, sizeof(buffer), &file) != NULL)
+    {
+        count++;
+    }
+
+    f_close(&file);
+
+    // Subtract 1 for header line
+    return (count > 0) ? (count - 1) : 0;
+}
+
+/**
+ * @brief Read a specific record line from current log file
+ * @param line_num Line number (0 = first data line after header)
+ * @param buffer Buffer to store the line
+ * @param buf_size Size of buffer
+ * @return 0 on success, 1 on failure
+ */
+u8 App_SDCard_ReadRecordLine(u32 line_num, char* buffer, u16 buf_size)
+{
+    FIL file;
+    FRESULT res;
+    u32 current_line = 0;
+
+    if(g_sdcard_status.initialized == 0)
+        return 1;
+
+    // Open current log file for reading
+    res = f_open(&file, log_filename, FA_READ);
+    if(res != FR_OK)
+        return 1;
+
+    // Skip header line
+    f_gets(buffer, buf_size, &file);
+
+    // Read until we reach the target line
+    while(f_gets(buffer, buf_size, &file) != NULL)
+    {
+        if(current_line == line_num)
+        {
+            f_close(&file);
+            return 0;  // Success
+        }
+        current_line++;
+    }
+
+    f_close(&file);
+    return 1;  // Line not found
+}
