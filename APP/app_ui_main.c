@@ -589,7 +589,7 @@ void App_UI_Main_Create(void)
     // Browse/Refresh button
     btn_browse_data = lv_btn_create(tab_files, NULL);
     lv_obj_set_size(btn_browse_data, 180, 50);
-    lv_obj_set_pos(btn_browse_data, 30, 420);
+    lv_obj_set_pos(btn_browse_data, 50, 420);
     lv_btn_set_style(btn_browse_data, LV_BTN_STYLE_REL, &style_btn_dark);
     lv_obj_set_event_cb(btn_browse_data, btn_browse_data_event);
 
@@ -599,7 +599,7 @@ void App_UI_Main_Create(void)
     // Delete all button (red)
     btn_clear_data = lv_btn_create(tab_files, NULL);
     lv_obj_set_size(btn_clear_data, 180, 50);
-    lv_obj_set_pos(btn_clear_data, 230, 420);
+    lv_obj_set_pos(btn_clear_data, 250, 420);
     lv_btn_set_style(btn_clear_data, LV_BTN_STYLE_REL, &style_btn_red);
     lv_obj_set_event_cb(btn_clear_data, btn_clear_data_event);
 
