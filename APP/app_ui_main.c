@@ -72,6 +72,66 @@ static float total_distance = 0.0f;
 static float last_lat = 0.0f;
 static float last_lon = 0.0f;
 static u8 stats_initialized = 0;
+static u8 file_list_initialized = 0;  // Track if file list has been loaded on boot
+
+// Helper function to refresh file list display
+static void refresh_file_list(void)
+{
+    FIL test_file;
+    FRESULT fres;
+    char filename[32];
+    char display[800];
+    u16 file_count = 0;
+
+    // Check if SD card is initialized
+    if(g_sdcard_status.initialized == 0)
+    {
+        lv_label_set_text(label_browse_data, "SD Card Error!\nCannot access files");
+        return;
+    }
+
+    // Scan for existing files
+    strcpy(display, "Files on SD Card:\n\n");
+
+    for(u16 i = 0; i < 100; i++)
+    {
+        sprintf(filename, "0:/data_%03d.csv", i);
+        fres = f_open(&test_file, filename, FA_READ);
+        if(fres == FR_OK)
+        {
+            // File exists, get size
+            DWORD file_size = f_size(&test_file);
+            f_close(&test_file);
+
+            char line[80];
+            sprintf(line, "data_%03d.csv  (%lu bytes)\n", i, file_size);
+            strcat(display, line);
+            file_count++;
+
+            // Limit display to 10 files to avoid overflow
+            if(file_count >= 10)
+            {
+                strcat(display, "\n... (more files exist)");
+                break;
+            }
+        }
+    }
+
+    // Show current recording status
+    if(g_sdcard_status.logging)
+    {
+        char status[80];
+        sprintf(status, "\n[Recording Now]\nCurrent: %d records", g_sdcard_status.record_count);
+        strcat(display, status);
+    }
+
+    if(file_count == 0)
+    {
+        strcpy(display, "No files found\n\nPress 'Start Log' to begin\nrecording GPS+IMU data");
+    }
+
+    lv_label_set_text(label_browse_data, display);
+}
 
 // Button event handler
 static void btn_record_toggle_event(lv_obj_t * obj, lv_event_t event)
@@ -190,60 +250,7 @@ static void btn_browse_data_event(lv_obj_t * obj, lv_event_t event)
 {
     if(event == LV_EVENT_CLICKED)
     {
-        FIL test_file;
-        FRESULT fres;
-        char filename[32];
-        char display[800];
-        u16 file_count = 0;
-
-        // Check if SD card is initialized
-        if(g_sdcard_status.initialized == 0)
-        {
-            lv_label_set_text(label_browse_data, "SD Card Error!\nCannot access files");
-            return;
-        }
-
-        // Scan for existing files
-        strcpy(display, "Files on SD Card:\n\n");
-
-        for(u16 i = 0; i < 100; i++)
-        {
-            sprintf(filename, "0:/data_%03d.csv", i);
-            fres = f_open(&test_file, filename, FA_READ);
-            if(fres == FR_OK)
-            {
-                // File exists, get size
-                DWORD file_size = f_size(&test_file);
-                f_close(&test_file);
-
-                char line[80];
-                sprintf(line, "data_%03d.csv  (%lu bytes)\n", i, file_size);
-                strcat(display, line);
-                file_count++;
-
-                // Limit display to 10 files to avoid overflow
-                if(file_count >= 10)
-                {
-                    strcat(display, "\n... (more files exist)");
-                    break;
-                }
-            }
-        }
-
-        // Show current recording status
-        if(g_sdcard_status.logging)
-        {
-            char status[80];
-            sprintf(status, "\n[Recording Now]\nCurrent: %d records", g_sdcard_status.record_count);
-            strcat(display, status);
-        }
-
-        if(file_count == 0)
-        {
-            strcpy(display, "No files found\n\nPress 'Start Log' to begin\nrecording GPS+IMU data");
-        }
-
-        lv_label_set_text(label_browse_data, display);
+        refresh_file_list();
     }
 }
 
@@ -639,6 +646,13 @@ void App_UI_Main_Create(void)
 void App_UI_Main_Update(void)
 {
     char buf[100];
+
+    // Auto-refresh file list once after SD card is initialized
+    if(g_sdcard_status.initialized && !file_list_initialized)
+    {
+        refresh_file_list();
+        file_list_initialized = 1;
+    }
 
     // ========== Status Bar ==========
     if(g_sdcard_status.initialized == 0)
