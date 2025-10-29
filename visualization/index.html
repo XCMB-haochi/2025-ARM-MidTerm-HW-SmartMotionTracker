@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniTrack - 轨迹可视化分析系统</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .map-container {
+            position: relative;
+        }
+
+        #map {
+            height: 600px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .upload-zone {
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9fa;
+        }
+
+        .upload-zone:hover {
+            border-color: #764ba2;
+            background: #e9ecef;
+        }
+
+        .upload-zone.dragover {
+            background: #667eea;
+            border-color: #667eea;
+            color: white;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            color: #212529;
+            font-weight: 600;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .speed-legend {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .legend-gradient {
+            flex: 1;
+            height: 20px;
+            border-radius: 5px;
+            background: linear-gradient(to right,
+                #0000ff 0%,
+                #00ffff 25%,
+                #00ff00 50%,
+                #ffff00 75%,
+                #ff0000 100%
+            );
+        }
+
+        .legend-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        #speedChart {
+            margin-top: 15px;
+        }
+
+        .playback-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .playback-slider {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            #map {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ UniTrack 轨迹可视化系统</h1>
+            <p>GPS+IMU 融合的跨场景全维度运动轨迹与状态监测</p>
+        </div>
+
+        <div class="main-content">
+            <div class="map-container">
+                <div id="uploadZone" class="upload-zone">
+                    <div class="upload-icon">📁</div>
+                    <h3>拖拽 CSV 文件到这里</h3>
+                    <p>或点击选择文件</p>
+                    <p style="margin-top: 10px; font-size: 0.9em; color: #6c757d;">
+                        支持格式: Time,Lat,LatDir,Lon,LonDir,Speed,Alt,Sats,Pitch,Roll,Yaw,Temp
+                    </p>
+                    <input type="file" id="fileInput" accept=".csv">
+                </div>
+                <div id="map" style="display: none;"></div>
+            </div>
+
+            <div class="sidebar">
+                <div class="card">
+                    <h3>📊 统计信息</h3>
+                    <div class="stat-item">
+                        <span class="stat-label">记录点数</span>
+                        <span class="stat-value" id="statPoints">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">总距离</span>
+                        <span class="stat-value" id="statDistance">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">运动时长</span>
+                        <span class="stat-value" id="statDuration">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">平均速度</span>
+                        <span class="stat-value" id="statAvgSpeed">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">最高速度</span>
+                        <span class="stat-value" id="statMaxSpeed">-</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">海拔范围</span>
+                        <span class="stat-value" id="statAltitude">-</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🎨 速度热图</h3>
+                    <div class="speed-legend">
+                        <span style="font-size: 0.9em;">慢</span>
+                        <div class="legend-gradient"></div>
+                        <span style="font-size: 0.9em;">快</span>
+                    </div>
+                    <div class="legend-labels">
+                        <span>0 km/h</span>
+                        <span id="maxSpeedLegend">100 km/h</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>⚙️ 控制面板</h3>
+                    <div class="controls">
+                        <button class="btn" id="btnPlayback" disabled>
+                            ▶️ 轨迹回放
+                        </button>
+                        <button class="btn" id="btnReset" disabled>
+                            🔄 重置视图
+                        </button>
+                        <button class="btn" id="btnExport" disabled>
+                            💾 导出报告
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card" id="chartCard" style="display: none;">
+                    <h3>📈 速度曲线</h3>
+                    <canvas id="speedChart" width="300" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let map, trackData = [], polyline, playbackMarker, playbackTimeout;
+        let speedChart;
+
+        // 初始化上传区域
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadZone.addEventListener('click', () => fileInput.click());
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('dragover');
+        });
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.csv')) {
+                processFile(file);
+            } else {
+                alert('请上传CSV文件！');
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) processFile(file);
+        });
+
+        // 处理CSV文件
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const text = e.target.result;
+                parseCSV(text);
+            };
+            reader.readAsText(file);
+        }
+
+        // 解析CSV数据
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            trackData = [];
+
+            // 跳过标题行
+            for (let i = 1; i < lines.length; i++) {
+                const parts = lines[i].split(',');
+                if (parts.length >= 12) {
+                    const lat = parseFloat(parts[1]);
+                    const lon = parseFloat(parts[3]);
+                    const speed = parseFloat(parts[5]);
+                    const alt = parseFloat(parts[6]);
+
+                    if (!isNaN(lat) && !isNaN(lon)) {
+                        trackData.push({
+                            time: parts[0],
+                            lat: lat,
+                            lon: lon,
+                            speed: speed || 0,
+                            altitude: alt || 0,
+                            pitch: parseFloat(parts[8]) || 0,
+                            roll: parseFloat(parts[9]) || 0,
+                            yaw: parseFloat(parts[10]) || 0
+                        });
+                    }
+                }
+            }
+
+            if (trackData.length > 0) {
+                initMap();
+                drawTrack();
+                updateStats();
+                createSpeedChart();
+                enableControls();
+            } else {
+                alert('CSV文件中没有有效的GPS数据！');
+            }
+        }
+
+        // 初始化地图
+        function initMap() {
+            uploadZone.style.display = 'none';
+            document.getElementById('map').style.display = 'block';
+
+            if (!map) {
+                map = L.map('map').setView([trackData[0].lat, trackData[0].lon], 13);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors'
+                }).addTo(map);
+            } else {
+                map.setView([trackData[0].lat, trackData[0].lon], 13);
+            }
+        }
+
+        // 绘制轨迹
+        function drawTrack() {
+            if (polyline) map.removeLayer(polyline);
+
+            const maxSpeed = Math.max(...trackData.map(d => d.speed));
+            const segments = [];
+
+            for (let i = 0; i < trackData.length - 1; i++) {
+                const speed = trackData[i].speed;
+                const color = getSpeedColor(speed, maxSpeed);
+
+                const segment = L.polyline(
+                    [[trackData[i].lat, trackData[i].lon],
+                     [trackData[i + 1].lat, trackData[i + 1].lon]],
+                    { color: color, weight: 4, opacity: 0.8 }
+                ).addTo(map);
+
+                segment.bindPopup(`
+                    <b>时间:</b> ${trackData[i].time}<br>
+                    <b>速度:</b> ${speed.toFixed(1)} km/h<br>
+                    <b>海拔:</b> ${trackData[i].altitude.toFixed(1)} m<br>
+                    <b>俯仰角:</b> ${trackData[i].pitch.toFixed(1)}°<br>
+                    <b>横滚角:</b> ${trackData[i].roll.toFixed(1)}°
+                `);
+
+                segments.push(segment);
+            }
+
+            // 起点标记
+            L.marker([trackData[0].lat, trackData[0].lon], {
+                icon: L.divIcon({
+                    html: '<div style="background: green; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">起</div>',
+                    className: '',
+                    iconSize: [30, 30]
+                })
+            }).addTo(map).bindPopup('<b>起点</b>');
+
+            // 终点标记
+            const last = trackData[trackData.length - 1];
+            L.marker([last.lat, last.lon], {
+                icon: L.divIcon({
+                    html: '<div style="background: red; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">终</div>',
+                    className: '',
+                    iconSize: [30, 30]
+                })
+            }).addTo(map).bindPopup('<b>终点</b>');
+
+            // 调整视图以包含所有点
+            const bounds = L.latLngBounds(trackData.map(d => [d.lat, d.lon]));
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+
+        // 速度颜色映射
+        function getSpeedColor(speed, maxSpeed) {
+            const ratio = speed / maxSpeed;
+            if (ratio < 0.2) return '#0000ff'; // 蓝
+            if (ratio < 0.4) return '#00ffff'; // 青
+            if (ratio < 0.6) return '#00ff00'; // 绿
+            if (ratio < 0.8) return '#ffff00'; // 黄
+            return '#ff0000'; // 红
+        }
+
+        // 计算两点间距离（Haversine公式）
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // 地球半径（公里）
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // 更新统计信息
+        function updateStats() {
+            document.getElementById('statPoints').textContent = trackData.length;
+
+            // 计算总距离
+            let totalDistance = 0;
+            for (let i = 0; i < trackData.length - 1; i++) {
+                totalDistance += calculateDistance(
+                    trackData[i].lat, trackData[i].lon,
+                    trackData[i + 1].lat, trackData[i + 1].lon
+                );
+            }
+            document.getElementById('statDistance').textContent = totalDistance.toFixed(2) + ' km';
+
+            // 平均速度和最高速度
+            const speeds = trackData.map(d => d.speed);
+            const avgSpeed = speeds.reduce((a, b) => a + b, 0) / speeds.length;
+            const maxSpeed = Math.max(...speeds);
+
+            document.getElementById('statAvgSpeed').textContent = avgSpeed.toFixed(1) + ' km/h';
+            document.getElementById('statMaxSpeed').textContent = maxSpeed.toFixed(1) + ' km/h';
+            document.getElementById('maxSpeedLegend').textContent = maxSpeed.toFixed(0) + ' km/h';
+
+            // 海拔范围
+            const altitudes = trackData.map(d => d.altitude);
+            const minAlt = Math.min(...altitudes);
+            const maxAlt = Math.max(...altitudes);
+            document.getElementById('statAltitude').textContent =
+                `${minAlt.toFixed(0)} - ${maxAlt.toFixed(0)} m`;
+
+            // 估算时长（假设每条记录间隔1秒）
+            const durationSec = trackData.length;
+            const hours = Math.floor(durationSec / 3600);
+            const minutes = Math.floor((durationSec % 3600) / 60);
+            const seconds = durationSec % 60;
+            document.getElementById('statDuration').textContent =
+                `${hours > 0 ? hours + 'h ' : ''}${minutes}m ${seconds}s`;
+        }
+
+        // 创建速度图表
+        function createSpeedChart() {
+            document.getElementById('chartCard').style.display = 'block';
+
+            const ctx = document.getElementById('speedChart').getContext('2d');
+
+            if (speedChart) speedChart.destroy();
+
+            speedChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: trackData.map((_, i) => i),
+                    datasets: [{
+                        label: '速度 (km/h)',
+                        data: trackData.map(d => d.speed),
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'km/h' }
+                        },
+                        x: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        // 启用控制按钮
+        function enableControls() {
+            document.getElementById('btnPlayback').disabled = false;
+            document.getElementById('btnReset').disabled = false;
+            document.getElementById('btnExport').disabled = false;
+        }
+
+        // 轨迹回放
+        document.getElementById('btnPlayback').addEventListener('click', function() {
+            if (playbackMarker) map.removeLayer(playbackMarker);
+
+            let index = 0;
+            const playbackInterval = 50; // 50ms间隔
+
+            playbackMarker = L.marker([trackData[0].lat, trackData[0].lon], {
+                icon: L.divIcon({
+                    html: '<div style="background: blue; width: 15px; height: 15px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>',
+                    className: '',
+                    iconSize: [15, 15]
+                })
+            }).addTo(map);
+
+            function animate() {
+                if (index < trackData.length) {
+                    playbackMarker.setLatLng([trackData[index].lat, trackData[index].lon]);
+                    map.setView([trackData[index].lat, trackData[index].lon], map.getZoom());
+                    index++;
+                    playbackTimeout = setTimeout(animate, playbackInterval);
+                } else {
+                    map.removeLayer(playbackMarker);
+                    playbackMarker = null;
+                }
+            }
+
+            animate();
+        });
+
+        // 重置视图
+        document.getElementById('btnReset').addEventListener('click', function() {
+            if (playbackTimeout) clearTimeout(playbackTimeout);
+            if (playbackMarker) {
+                map.removeLayer(playbackMarker);
+                playbackMarker = null;
+            }
+
+            const bounds = L.latLngBounds(trackData.map(d => [d.lat, d.lon]));
+            map.fitBounds(bounds, { padding: [50, 50] });
+        });
+
+        // 导出报告
+        document.getElementById('btnExport').addEventListener('click', function() {
+            const report = `
+UniTrack 轨迹分析报告
+=====================
+
+统计信息：
+- 记录点数: ${trackData.length}
+- 总距离: ${document.getElementById('statDistance').textContent}
+- 运动时长: ${document.getElementById('statDuration').textContent}
+- 平均速度: ${document.getElementById('statAvgSpeed').textContent}
+- 最高速度: ${document.getElementById('statMaxSpeed').textContent}
+- 海拔范围: ${document.getElementById('statAltitude').textContent}
+
+详细数据：
+时间,纬度,经度,速度(km/h),海拔(m),俯仰角,横滚角,偏航角
+${trackData.map(d => `${d.time},${d.lat},${d.lon},${d.speed},${d.altitude},${d.pitch},${d.roll},${d.yaw}`).join('\n')}
+
+生成时间: ${new Date().toLocaleString()}
+            `.trim();
+
+            const blob = new Blob([report], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'UniTrack_Report_' + new Date().getTime() + '.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+    </script>
+</body>
+</html>
