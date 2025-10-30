@@ -19,6 +19,8 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
         }
 
         .container {
@@ -28,6 +30,9 @@
             border-radius: 15px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
         }
 
         .header {
@@ -53,14 +58,19 @@
             grid-template-columns: 1fr 350px;
             gap: 20px;
             padding: 20px;
+            flex: 1;
         }
 
         .map-container {
             position: relative;
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
         }
 
         #map {
-            height: 600px;
+            flex: 1;
+            min-height: 450px;
             border-radius: 10px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
@@ -73,6 +83,13 @@
             cursor: pointer;
             transition: all 0.3s;
             background: #f8f9fa;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
         }
 
         .upload-zone:hover {
@@ -209,6 +226,216 @@
             display: none;
         }
 
+        .footer {
+            background: #f8f9fa;
+            padding: 25px 30px 15px 30px;
+            border-top: 2px solid #e9ecef;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+            position: relative;
+        }
+
+        .footer-logo {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            margin-top: 20px;
+            grid-column: 1 / -1;
+        }
+
+        .footer-logo img {
+            height: 50px;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+
+        .footer-logo img:hover {
+            opacity: 1;
+        }
+
+        .footer-section h4 {
+            color: #667eea;
+            font-size: 1em;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .author-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+            border: 3px solid #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+            object-fit: cover;
+            object-position: center;
+        }
+
+        .footer-section p {
+            color: #6c757d;
+            font-size: 0.9em;
+            line-height: 1.8;
+            margin: 5px 0;
+        }
+
+        .footer-section a {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-section a:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+
+        .footer-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            margin-right: 8px;
+            margin-top: 5px;
+        }
+
+        .github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #24292e;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: background 0.2s;
+            margin-top: 10px;
+        }
+
+        .github-link:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* 深色模式切换按钮 */
+        .dark-mode-toggle {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .dark-mode-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        /* 深色模式样式 */
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        body.dark-mode .container {
+            background: #0f3460;
+            color: #e8e8e8;
+        }
+
+        body.dark-mode .header {
+            background: linear-gradient(135deg, #16213e 0%, #0f3460 100%);
+        }
+
+        body.dark-mode .upload-zone {
+            background: #1a1a2e;
+            border-color: #667eea;
+            color: #e8e8e8;
+        }
+
+        body.dark-mode .upload-zone:hover {
+            background: #16213e;
+        }
+
+        body.dark-mode .card {
+            background: #1a1a2e;
+            color: #e8e8e8;
+        }
+
+        body.dark-mode .card h3 {
+            color: #a8b2ff;
+        }
+
+        body.dark-mode .stat-item {
+            background: #16213e;
+            color: #e8e8e8;
+        }
+
+        body.dark-mode .stat-label {
+            color: #b0b0b0;
+        }
+
+        body.dark-mode .stat-value {
+            color: #667eea;
+        }
+
+        body.dark-mode .speed-legend,
+        body.dark-mode .legend-labels {
+            color: #e8e8e8;
+        }
+
+        body.dark-mode .sidebar {
+            background: transparent;
+        }
+
+        body.dark-mode .footer {
+            background: #1a1a2e;
+            border-top-color: #16213e;
+        }
+
+        body.dark-mode .footer-section h4 {
+            color: #a8b2ff;
+        }
+
+        body.dark-mode .footer-section p {
+            color: #b0b0b0;
+        }
+
+        body.dark-mode .footer-section a {
+            color: #a8b2ff;
+        }
+
+        body.dark-mode .footer-logo img {
+            filter: brightness(0.8);
+        }
+
+        body.dark-mode .dark-mode-toggle {
+            background: rgba(26, 26, 46, 0.9);
+            color: #ffd700;
+        }
+
+        body.dark-mode button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        body.dark-mode button:hover {
+            opacity: 0.9;
+        }
+
         @media (max-width: 1024px) {
             .main-content {
                 grid-template-columns: 1fr;
@@ -217,10 +444,20 @@
             #map {
                 height: 400px;
             }
+
+            .footer {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- 深色模式切换按钮 -->
+    <button class="dark-mode-toggle" onclick="toggleDarkMode()" title="切换深色模式">
+        <span id="dark-mode-icon">🌙</span>
+    </button>
+
     <div class="container">
         <div class="header">
             <h1>🗺️ UniTrack 轨迹可视化系统</h1>
@@ -304,11 +541,78 @@
                 </div>
             </div>
         </div>
+
+        <!-- 页脚信息 -->
+        <div class="footer">
+            <div class="footer-section">
+                <h4>📚 项目信息</h4>
+                <p><strong>项目名称:</strong> UniTrack</p>
+                <p><strong>课程:</strong> 嵌入式系统设计</p>
+                <p><strong>题目:</strong> GPS+IMU融合的跨场景全维度运动轨迹与状态监测系统</p>
+                <div>
+                    <span class="footer-badge">STM32F407</span>
+                    <span class="footer-badge">GPS+IMU</span>
+                    <span class="footer-badge">LVGL</span>
+                </div>
+            </div>
+
+            <div class="footer-section">
+                <h4>👤 作者信息</h4>
+                <img src="images/avatar.png" alt="Author Avatar" class="author-avatar">
+                <p><strong>徐奕博</strong> · 通信2402</p>
+                <p>江苏大学 计算机科学与通信工程学院</p>
+            </div>
+
+            <div class="footer-section">
+                <h4>🔗 相关链接</h4>
+                <p><strong>开发时间:</strong> 2025年1月</p>
+                <p><strong>Web前端:</strong> Leaflet.js + Chart.js</p>
+                <a href="https://github.com/XCMB-haochi/2025-ARM-MidTerm-HW-SmartMotionTracker"
+                   target="_blank"
+                   class="github-link">
+                    <svg height="20" viewBox="0 0 16 16" width="20" fill="currentColor">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                    </svg>
+                    GitHub 仓库
+                </a>
+            </div>
+
+            <!-- 校徽水印 -->
+            <div class="footer-logo">
+                <img src="images/JSU.png" alt="Jiangsu University">
+            </div>
+        </div>
     </div>
 
     <script>
         let map, trackData = [], polyline, playbackMarker, playbackTimeout;
         let speedChart;
+
+        // 深色模式切换功能
+        function toggleDarkMode() {
+            const body = document.body;
+            const icon = document.getElementById('dark-mode-icon');
+
+            body.classList.toggle('dark-mode');
+
+            // 更新图标
+            if (body.classList.contains('dark-mode')) {
+                icon.textContent = '☀️';
+                localStorage.setItem('darkMode', 'enabled');
+            } else {
+                icon.textContent = '🌙';
+                localStorage.setItem('darkMode', 'disabled');
+            }
+        }
+
+        // 页面加载时检查用户偏好
+        window.addEventListener('DOMContentLoaded', () => {
+            const darkMode = localStorage.getItem('darkMode');
+            if (darkMode === 'enabled') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('dark-mode-icon').textContent = '☀️';
+            }
+        });
 
         // 初始化上传区域
         const uploadZone = document.getElementById('uploadZone');
